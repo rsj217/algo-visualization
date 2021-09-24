@@ -9,6 +9,9 @@
 <body>
     <input type="text" name="" id="insert">
     <button id="insert" onclick="onInsert()">insert</button>
+    <br/>
+    <input type="text" name="" id="delete">
+    <button id="delete" onclick="onDelete()">delete</button>
     <div id="graph" style="text-align: center;"></div>
 
 <script>
@@ -27,13 +30,33 @@
         .renderDot(s);
   }
 
+  function onDelete(argument) {
+    var input = document.querySelector("#delete").value;
+    var key = parseInt(input);
 
+    bst.delete(key);
+
+
+
+    var s = graphviz(bst.root);
+
+    d3.select("#graph")
+      .graphviz()
+        .renderDot(s);
+  }
 
 
   function TreeNode(val) {
     this.val = val;
     this.left = null;
     this.right = null;
+  }
+
+  function minimumDFS(node){
+    if (node.left == null){
+      return node;
+    }
+    return minimumDFS(node.left);
   }
 
   function insertDFS(node, key) {
@@ -50,6 +73,32 @@
     return node;
   }
 
+  function deleteDFS(node, key) {
+    if (node == null){
+        return;
+    }
+    if (key < node.val){
+        node.left = deleteDFS(node.left, key)
+    } else if (node.val < key) {
+        node.right = deleteDFS(node.right, key)
+    } else {
+        if (node.left != null && node.right != null){
+            var successor = minimumDFS(node.right);
+            successor.right = deleteDFS(node.right, successor.key);
+            successor.left = node.left;
+            node = successor
+        } else if (node.left != null) {
+            return node.left;
+        } else if (node.right != null) {
+          return node.right;
+        } else {
+          return null;
+        }
+    }
+    return node;
+  }
+
+
   function BSTree(){
     this.root = null;
     this.insert = function (key) {
@@ -57,6 +106,13 @@
             this.root = new TreeNode(key);
         } else {
             this.root = insertDFS(this.root, key)
+        }
+    };
+    this.delete = function (key) {
+        if (this.root == null){
+            return 
+        } else {
+            this.root = deleteDFS(this.root, key)
         }
     }
   }
