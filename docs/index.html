@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+  <title>Leetcode TreeNode visualization</title>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
+  <script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
+  <script>
+
+  function TreeNode(val) {
+    this.val = val;
+    this.left = null;
+    this.right = null;
+  }
+
+  function create(nums){
+    var numsSize = nums.length;
+    if (numsSize <= 0){
+      return;
+    }
+
+    var root = new TreeNode(nums[0]);
+    var queue = [root];
+    var index = 0;
+
+    while (queue.length > 0){
+      var size = queue.length;
+      for (var i = 0; i < size; i++) {
+        var node = queue.shift();
+        var lseq = 2 * index + 1;
+        var rseq = 2 * index + 2;
+        if (lseq < numsSize && nums[lseq] !== null){
+          node.left = new TreeNode(nums[lseq]);
+          queue.push(node.left);
+        }
+        if (rseq < numsSize && nums[rseq] !== null){
+          node.right = new TreeNode(nums[rseq]);
+          queue.push(node.right);
+        }
+        index++;
+      }
+    }
+    return root;
+  }
+
+  function graphviz(root){
+    if (root === null) {
+      return
+    };
+
+    var seq = 0;
+    var queue = [[root, seq]];
+
+    var lines = [];
+      lines.push('digraph g {')
+      lines.push('node [shape=record, height=.1];')
+      lines.push('node' + seq + '[label="<f0> |' + root.val + '| <f1>"];')
+
+    while (queue.length > 0){
+      var size = queue.length;
+      for (var i = 0; i < size; i++){
+        var item = queue.shift()
+        var node = item[0];
+        var seq = item[1];
+        
+        console.log(node.left)
+
+
+        if (node.left != null){
+
+          var lseq = 2 * seq + 1
+          queue.push([node.left, lseq])
+          lines.push('node' + lseq + '[label="<f0> |' + node.left.val + '| <f1>"];');
+          lines.push('node' + seq + ':f0 -> node' + lseq + ';');
+        }
+
+        if (node.right != null){
+          var rseq = 2 * seq + 2
+          queue.push([node.right, rseq])
+          lines.push('node' + rseq + '[label="<f0> |' + node.right.val + '| <f1>"];');
+          lines.push('node' + seq + ':f1 -> node' + rseq + ';');
+        }
+      }
+    }
+    lines.push('}');
+    return lines.join('\n');
+  }
+
+
+  function draw(){
+    var input = document.querySelector("#nums").value;
+    if (input.length <= 0){
+      alert("please enter treenode literal");
+      return
+    }
+
+    var input = input.substring(1, input.length-1);
+    var arr = input.split(",");
+
+    var nums = arr.map(x => {
+      var x = x.trim();
+      if (x == "null"){
+        return null;
+      } else {
+        return x;
+      }
+    })
+    var root = create(nums);
+    var s = graphviz(root);
+    // console.log(s)
+    d3.select("#graph")
+      .graphviz()
+        .renderDot(s);
+
+  }
+
+  </script>
+</head>
+<body>
+<p>enter leetcode treenode literal:<p>
+<textarea id="nums" rows="5" cols="30" placeholder="[1, 2, null, 3, 8, null, 10]"></textarea>
+<br/>
+<button id="draw" onclick="draw()">draw</button>
+<div id="graph" style="text-align: center;"></div>
+</body>
